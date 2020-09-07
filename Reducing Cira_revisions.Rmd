@@ -1,0 +1,599 @@
+---
+title: "Clean environments as a social norm: A field experiment on cigarette littering"
+author:
+  - name: Julian Sagebiel
+    email: sagebiel@tu-berlin.de
+    affiliation: Technische Universität Berlin
+    footnote: Corresponding Author
+  - name: Lukas Karok
+    email: 	lukas.karok@campus.tu-berlin.de
+    affiliation: Technische Universität Berlin
+  - name: Julian Grund
+    email: 	j.grund@campus.tu-berlin.de
+    affiliation: Technische Universität Berlin
+  - name: Jens Rommel
+    email: jens.rommel@slu.se
+    affiliation: SLU
+address:
+  - code: Technische Universität Berlin
+    address: Technische Universität Berlin, Institute for Landscape Architecture and Enviromental Planning, Berlin, Germany
+  - code: SLU
+    address: Swedish University of Agricultural Sciences (SLU), Department of Economics, Uppsala, Sweden
+  
+
+abstract: "Cigarette littering in public spaces is an environmental and aesthetic problem. Broken windows theory posits that visible signs of anti-social behavior such as littering create the perception of a social norm in built environments. Cigarette butts on the ground then encourage people to drop theirs as well. We test this theory on benches of a university campus in a field experiment with two treatments: (1) a clean environment with no cigarette butts on the ground and (2) a dirty environment with 25 cigarette butts on the ground. Our outcome variable is the number of additional cigarette butts on the ground after two hours. We find a small effect of approximately 0.5 butts less per 2-hour period on clean grounds. Increased cleaning efforts can thus reduce littering, but the effect is probably too small to justify additional cleaning costs."        
+  
+keywords: Broken Windows Theory; Sustainable Urban Environments; Built Environment; Public Cleaning; Berlin; Germany
+journal: "Environmental Research Communications"
+date: "`r Sys.Date()`"
+bibliography: references.bib
+linenumbers: false
+numbersections: true
+csl: elsevier-harvard.csl
+geometry: left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+output:
+  bookdown::pdf_book:
+    base_format: rticles::elsevier_article
+    keep_tex: TRUE
+---
+
+
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE , message=FALSE, warning=FALSE)
+options(tinytex.clean = TRUE)
+rm(list=ls())
+set.seed(190618)
+options(digits=4)
+library("rticles")
+library("psych")
+library("ggplot2")
+library("magrittr")
+library("knitr")
+library("dplyr")
+library("reshape2")
+library("tidyr")
+library("stargazer")
+library("broom")
+#library(wordcountaddin)
+library("ggpubr")
+library("cobalt")
+
+
+## package to make longtable stargazer functions
+longtable.stargazer = function(..., float = T, longtable.float = F, 
+  longtable.head = T, filename = NULL){
+  # Capturing stargazer to hack it
+  require(stargazer)
+  res = capture.output(
+    stargazer(..., float = float)
+  )
+  # Changing tabulare environment for longtable
+    res = gsub("tabular", "longtable", res)
+  # removing floating environment
+  if(float == T & longtable.float == F){
+    res[grep("table", res)[1]] = res[grep("longtable", res)[1]]
+    # Removing extra longtable commands
+    res = res[-grep("longtable", res)[2]]
+    res = res[-length(res)]
+  }
+  # Adding page headings
+  if(longtable.head == T){
+    res = c(res[1:which(res == "\\hline \\\\[-1.8ex] ")[1] - 1], "\\endhead", res[which(res == "\\hline \\\\[-1.8ex] ")[1]:length(res)])
+  }
+  # Exporting
+  cat(res, sep = "\n")
+  # Exporting
+#   if(!is.null(filename)){
+#     cat(res, file = filename, sep = "\n")
+#     # message
+#     cat(paste("\nlatex output printed to", filename, "\n", sep = " ", 
+#       collapse = ""))
+#   }else{
+#     cat(res, sep = "\n")
+#   }
+}
+
+#words<- wordcountaddin:::text_stats()
+```
+
+
+\vspace{9em}
+
+
+\newpage
+
+# Introduction
+
+Human behavior in public spaces is at the core of many sustainability challenges. Among these challenges, littering is an aesthetic and an ecological problem [@Dur2015; @VEITCH2017]. Cigarette butt littering in particular has adverse environmental and health effects [@Slaughter2011; @Healton2011; @Barnes2011; @Novotny2011; @Harris2011]. Several measures to reduce littering, including cigarette littering in public spaces, such as bans, stricter laws, regulation, and nudging have not or only partly succeeded [@Schneider2011; @Cingolani2016; @Smith2011; @Reiter_1980]. Especially hospitality and educational venues, playgrounds, and bus stops are hot spots of cigarette littering [@Valiente_2020], creating a demand for more applied research[@Valiente_2020].
+
+Social norms are a strong driver of human behavior, and they can explain extensive and continued cigarette butt littering. People's perceptions of what is socially appropriate or inappropriate are highly predictive of actual behavior in abstract [@krupka2013] and contextualized experiments [@Vesely2018; @loft2019effectiveness]. In a built urban environment, the impact of social norms on behavior has been mostly discussed in relation to broken window theory [@harcourt2006broken; @Volker2017528; @wilson1982broken]. Broken window theory posits that small cues of neighborhood deterioration can lead to anti-social behaviors, because the negative status quo is perceived as a dominant social norm.
+
+Broken windows theory suggests that a person is less likely to litter in a green and tidy environment [@Weaver2015; @Joo2015; @Dur2015]. Increased public cleaning efforts could then reduce littering by breaking the downward spiral of littering. In the long run, cleaning costs would decrease. Several experimental studies in different contexts [@ramos2012academics; @cialdini1990focus; @crump1977effects; @Reno_1993; @Dur2015; @Reiter_1980; @Krauss_1978; @Finnie_1973; @Geller_1977] have investigated this issue in field experiments, most  of which found statistically significant and large effects (littering was cut in half in many instances). For example, @ramos2012academics investigated the littering behavior of academics in a clean versus a messy shared indoor space, finding that more than 50% of subjects litter in the messy environment compared to only 18% in a clean environment. @cialdini1990focus find similar effect sizes in three different field experiments in outside environments. Only @crump1977effects and @Reno_1993 find no or opposite effects. In a littered picnic area, @crump1977effects find less additional litter when tested against  a benchmark of a clean picnic area, and @Reno_1993 find no effect of a clean environment at the parking lot of a public library. As summarized in @Dur2015, most studies recommend increased cleaning efforts to reduce public littering.
+
+While the evidence on the existence of social norms in the context of littering is overwhelming in the case of littering in general, there is no study that experimentally investigates this effect for cigarette littering. Cigarette littering is different from other kinds of littering, e.g. plastic bags or food left-overs. First, cigarette butts are small. Their visual and aesthetic effects could be perceived as less severe, as cigarette butts are not as disturbing as larger litter. Second, placing a cigarette butt into a proper bin requires more effort than normal litter. A smoker has to put out the cigarette butt first, which is often done on the ground. A smoker has to pick up the cigarette butt from the ground which is additional effort. Third, smoking is a habitual behavior, with smokers being constantly confronted with the disposal of cigarette butts, implying a certain fatigue to environmental stimuli. To identify mechanisms to reduce cigarette littering, a clear understanding of the effect of a clean versus a littered environment is required.
+
+We contribute to the empirical literature on littering in clean versus dirty environments with a field experiment on cigarette butt littering. We introduce treatments of a clean and a dirty environment around public benches on a university campus -- a hot spot of cigarette butt littering [@Valiente_2020]. Our outcome variable is the number of additional cigarette butts on the ground. Our hypothesis is that a clean environment leads to less cigarette littering.
+
+Our contribution is twofold. First, we augment the behavioral science literature on social norms by providing additional evidence from the field in a new context. It is important to replicate experiments in diverse contexts and to build a body of studies that can be used for meta-analyses [@christensen2019transparent]. Second, our results are useful for planners and policy makers who want to find strategies to reduce littering. 
+
+
+# Experimental Design
+
+The experiment took place at benches at the urban campuses of the Technische Universtität Berlin ( approximately 33,000 students) and the adjacent Universität der Künste (approximately 4,000 students) in Berlin, Germany ^[https://www.tu.berlin/en/about/profile/tu-berlin-statistics/ and https://www.udk-berlin.de/en/service/press-communication/figures-and-facts/]. Both campuses are accessible to and used by the general public as well. Two treatments were applied. In both treatments, we removed all cigarette butts from the ground. In treatment 1 (henceforth CLEAN), we left the ground clean. In treatment 2 (henceforth DIRTY) we placed exactly 25 cigarette butts within a 1.5 m radius in front of the bench. Our outcome variable was the number of additional cigarette butts on the ground after two hours. Every two hours, starting from 8:45 am, the ground in front of the benches was cleaned, and for  the DIRTY treatment 25 cigarette butts were placed in front of the bench. After cleaning, the field assistants left the area to avoid experimenter demand effects. After two hours, the field assistants returned, counted the number of cigarette butts on the ground, and prepared the bench for the next round of data collection.
+
+Our sample size allowed us to detect rather small effect sizes. For instance, for a difference of one cigarette and an assumed standard deviation of 2, the required sample size per treatment was 63 (for a two-sided independent t-test with $\alpha$ = 0.05 and P = 0.8). As we did not have any priors and could not make any distributional assumptions, we opted for a sample size of 100 per treatment. To achieve 200 observations we planned to use ten benches with four observations per bench and day for a duration of five days. We used a balanced design to achieve orthogonality between treatments, benches, time of the day, and day of the week. Each bench was alternately assigned to one of the treatments. For example, bench 1 on day 1 was assigned to CLEAN in the first run (9-11 hours), to DIRTY in the second run, to CLEAN in the third run and to DIRTY in the fourth run. On day 2, the order was reversed.
+
+The experiment was carried out from Monday to Friday in the second week of June 2018. Initially, we selected ten benches, based on a combination of the "diverse cases" and "similar cases" principles [@Seawright_2008]. The aim of the selection process was to cover as much heterogeneity in benches as possible while having enough observations for each type of bench to get statistically significant results. To fulfill the first criterion (diverse cases principle), we selected five benches which are as different to each other as possible based on location, congestion and type of people visiting them. Note that there could be a tradeoff between aiming for heterogeneity for broader coverage as well as validity and the efficiency goal to achieve a small standard deviation. For the second criterion, for each bench that we have included, we looked for similar benches. We only selected benches that were frequently used and feasible for data collection. Benches with a sandy ground were excluded, as cigarette butts easily disappear in the sand (see appendix for a map of selected benches).
+
+During the experiment, some data points were lost. First, some benches were cleaned by the university staff during the data collection. We could not record the number of cigarette butts in these instances. Second, a children festival took place at two benches for two hours, and people were not allowed to smoke during that time. Third, on windy days, the wind blew away the cigarette butts. The last issue was problematic as we could detect it only for the DIRTY treatment (if there were less than 25 cigarettes when we recorded the data). Removing these cases would have led to an unbalanced design and an upward bias of the treatment effect. Instead of deleting these observations, we recorded the observations as zero, i.e., no additional cigarettes. By doing so, we maintain orthogonality and avoid an upward bias of the treatment effect estimate (at the risk of a downward bias). In other words, the results are a lower bound and a conservative estimate of the treatment effect. During field work, it became apparent that the targeted number of 200 observations could not be achieved. To compensate for that, two benches (benches 11 and 12) were added during the field phase, resulting in a total of 12 benches. The two additional benches were added from day 3 onwards, and treatments were assigned with the same procedure. In total, 206 data points were observed and used for the final analysis.  
+
+
+
+
+
+
+# Results
+
+
+```{r Dateneinlesen, include=FALSE}
+Zigarro <- melt(read.csv("Zigarette.csv", sep=";") ,id=c("uhr")  )
+
+
+
+Zigarro <- Zigarro %>%
+  rename(Bank_Number = variable , No_Cigarettes = value) %>%
+   mutate( No_Cigarettes =
+            ifelse(Bank_Number!="b12" & Bank_Number!="b11"   ## these were added during the field phase thus only on friday and wednesday  
+                   & !(uhr =="tag2 11uhr" & Bank_Number=="b4") ## there was a childrens festival, so not possible
+                   & !(uhr =="tag2 11uhr" & Bank_Number=="b5") ## there was a childrens festival, so not  possible
+                   & !(uhr =="tag2 11uhr" & Bank_Number=="b9") ## cleaning stuff or other issue that made it NA
+                   & !(uhr =="tag2 13uhr" & Bank_Number=="b9") ## cleaning stuff or other issue that made it NA
+                   & !(uhr =="tag2 15uhr" & Bank_Number=="b9") ## cleaning stuff or other issue that made it NA
+                   & !(uhr =="tag2 17uhr" & Bank_Number=="b9") ## cleaning stuff or other issue that made it NA
+                   , replace_na(No_Cigarettes,25), No_Cigarettes) ,
+    Treatment = (if_else(No_Cigarettes > 24, "DIRTY" , "CLEAN")),
+    No_Cigarettes = ifelse(Treatment == "DIRTY", No_Cigarettes - 25 , No_Cigarettes)) %>%  
+ separate( col = uhr, into = c("Tag", "Uhrzeit"), sep = " ") %>%
+  na.omit()
+
+
+```
+
+
+
+Due to the loss of data points, the final outcomes are not fully balanced across benches, time of the day, and day of the week. Yet, we do not use balance tests on bench covariates, as they are a form of data-driven analysis [@Linden_2014; @Ali_2015]. Due to the initially balanced and fully orthogonal design, we have no reason to believe that missing data points introduce any bias. Even if data points were missing systematically, the design would be very robust to this. In the appendix we present graphs with respect to number of observations per treatment separated by benches, time of the day and day.  
+
+Figure \@ref(fig:histo) shows a bar chart with the number of cigarette butts on the ground by treatments. The frequency of zero butts is higher in the CLEAN treatment. Yet, in the CLEAN treatment there were three observations with nine to 12 additional cigarette butts.
+
+
+
+
+```{r histo, fig.cap="Bar Chart by Treatment"}
+
+ggplot(Zigarro, aes(x=No_Cigarettes , fill=as.factor(Treatment))) +
+  geom_bar(alpha=0.5, position = position_dodge2(width=0.9, preserve = "single")) +
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,1)) +
+  scale_y_continuous(name = "Frequency" , breaks = seq(0,60,5) ) +
+  theme_pubr() +
+  theme(legend.title = element_blank(), text = element_text(family = "serif")) +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.4 , end = 0.1)
+ 
+
+
+```
+
+
+
+
+
+```{r test, include=FALSE}
+
+t.test(No_Cigarettes ~ Treatment, data = Zigarro ,alternative = "less")
+
+wilcox.test(No_Cigarettes ~ Treatment, data = Zigarro ,alternative = "less")
+```
+
+
+
+
+```{r sumtab2, echo=FALSE}
+
+summary_table_cigarettes <-Zigarro %>%
+  group_by(Treatment) %>%
+  summarise(N = n()  , Mean = mean(No_Cigarettes, na.rm=T) , Median = median(No_Cigarettes, na.rm=T) , `Standard Deviation` = sd(No_Cigarettes, na.rm=T) , Minimum=min(No_Cigarettes, na.rm=T) , Maximum=max(No_Cigarettes, na.rm=T))
+
+kable(summary_table_cigarettes, booktabs = TRUE, caption = "Summary statistics separated by treatment")
+
+```
+
+
+```{r sumtab, echo=FALSE, include=FALSE}
+
+table(Zigarro$Treatment, Zigarro$Tag)
+table(Zigarro$Treatment, Zigarro$Uhrzeit)
+table(Zigarro$Treatment, Zigarro$Bank_Number)
+```
+
+
+Table \@ref(tab:sumtab2) shows that the mean and median are lower in the CLEAN treatment, and the standard deviation is higher in the CLEAN treatment. A two sided t-test and a non-parametric Wilcoxon test reject the Null hypothesis of equal means/distributions at a 1\% significance level. The difference between the means is approximately 0.6. Plots distinguishing between benches, day of the week, and time-of-day are presented in the appendix.
+
+We estimate Poisson (count data) regression models with various fixed effects to adjust for benches, days and time-of-day effects [@cameron2013]. The treatment variable (DIRTY) is 0 for the CLEAN treatment and 1 for the DIRTY treatment. The coefficient of DIRTY shows the effect of the treatment on the number of cigarettes on the ground. In total, we estimate five models with different fixed effects (Table \@ref(tab:poisson)). The first model (column 1 in Table \@ref(tab:poisson)) includes all fixed effects (bench, day of the week, time-of-day). Models 2 to 4 include bench, day of the week, and time-of-day fixed effects, respectively. Model 5 has no fixed effects.
+
+
+
+```{r poissonmodel , results="asis"}
+pois_basic <-
+  glm(No_Cigarettes ~ Treatment , data = Zigarro , family = "poisson")
+
+pois_days <-
+  glm(No_Cigarettes ~ Treatment + as.factor(Tag) ,
+      data = Zigarro ,
+      family = "poisson")
+pois_times <-
+  glm(No_Cigarettes ~ Treatment + as.factor(Uhrzeit) ,
+      data = Zigarro ,
+      family = "poisson")
+pois_banks <-
+  glm(
+    No_Cigarettes ~ Treatment + as.factor(Bank_Number) ,
+    data = Zigarro ,
+    family = "poisson"
+  )
+pois_all <-
+  glm(
+    No_Cigarettes ~ Treatment + as.factor(Tag) + as.factor(Uhrzeit) + as.factor(Bank_Number) ,
+    data = Zigarro  ,
+    family = "poisson"
+  )
+
+
+
+
+
+stargazer(
+  pois_all ,
+  pois_banks ,
+  pois_days ,
+  pois_times ,
+  pois_basic  ,
+  keep = "TreatmentDIRTY",
+  dep.var.labels.include = FALSE ,
+  column.labels = c(" ", " ", " ", " ", " "),
+  #        column.labels  = c("FE ALL" , "FE Bench" , "FE Days" , "FE Time" , "Basic") ,
+  omit = c("Bank_Number", "Tag", "Uhrzeit") ,
+  omit.labels = c("Bench FE", "Days FE", "Time of Day FE") ,
+  type = "latex" ,
+  title = "Poisson Models",
+  notes = "Coefficients for fixed effects omitted. Full regression table is found in Appendix B",
+  header = FALSE,
+  notes.align = "l" ,
+  column.sep.width = "22pt",
+  dep.var.caption = "" ,
+  covariate.labels = c("DIRTY") ,
+  label = "tab:poisson"
+)
+
+
+```
+
+The results of the regressions are in line with the comparisons of means and distributions. The estimates range from $0.472$ to $0.522$ and are significantly different from zero on a 1\% level. Most of the fixed effects are not statistically significantly different from zero. Day 2 and bench number 10 have a significant negative effect (5\% level) of $-0.47$ and $-2.0$ on the number of cigarettes on the ground, respectively. Benches 4 and 6 display a significant positive effect of $0.7$ and $0.5$. We have no explanation for these effects, and they may just indicate the idiosyncratic popularity of a bench among smokers or a higher frequency of use. Controlling for fixed effects does not change the treatment effect. We can reject the hypothesis that there is no effect of a CLEAN environment. The full model results are reported in the appendix. As an additional robustness test, we estimate ordinary linear least square regression models with the same variables. The results are similar to the Poisson model and also reported in the appendix.
+
+
+# Discussion and Conclusion
+
+In this paper, we investigated the effect of a clean environment on cigarette butt littering. Based on broken windows theory, we argued that a clean environment can be perceived as a social norm. We conducted a field experiment at 12 benches of a university campus and randomly manipulated the number of cigarette butts on the ground. A clean environment reduced the number of cigarette butts on the ground by approximately 0.5 every two hours.  
+ 
+In contrast to previous studies, the positive effect of a clean environment is rather small. In other contexts, effects of a clean environment showed decreases in littering of more than 50%. Our results suggest that cigarette littering is substantially different from other forms of littering. Hence, implications differ in the specific case. To better understand the conditions under which broken windows theory holds, more studies in various contexts and further replications of experiments are required. A meta-analysis of existing results can help to identify the factors influencing broken windows theory.
+
+The results of other papers often imply that more cleaning leads to a "double dividend" and reduces littering substantially [@Dur2015]. These papers end with the policy recommendation that cities should increase their budgets for cleaning. In our case, the small effect of about 0.5 cigarette butts per two hours appears too small to justify additional cleaning. Cheap measures, such as signs [@Krauss_1978; @Reiter_1980], more and better suited litter cans [@Finnie_1973], and anti-littering and anti-smoking campaigns and information [@Finnie_1973; @Geller_1977] may be more effective. Increased cleaning should focus on the “hot spots” of littering [@Valiente_2020]. In some contexts, small nudges have been powerful tools to increase pro-environmental behavior [e.g. @Rommel_2015]. In many countries, cigarette packages display deterring pictures to limit smoking [@hammond2011health]. One could test the effect of normative messages on the negative environmental consequences of littering on the cigarette package or test the impact of messages next to the benches.
+
+Our study is limited in several aspects. First, we used only two treatments with zero and with 25 cigarette butts on the ground. To better understand the broken windows effect, one would need to know more on intermediate levels, possible tipping points and non-linearity such as the number of cigarette butts on the ground that would lead to a qualitative change in the perception of the dominant social norm in smokers [@cialdini1990focus]. Second, we used a specific context (university campuses and benches). In other contexts, the effects may be very different. For example, it is likely that littering behavior depends on socio-demographic characteristics [e.g. @Krauss_1978] and the type of area [@Valiente_2020]. In our study we cannot control for such variables and it is likely that our sample is not representative for the city of Berlin. Third, we did not observe people directly. A direct observation of the people who litter would have allowed for a more extensive analysis of the determinants of littering. Several studies have found that littering behavior differs between socio-demographic groups. In contrast to those studies, we observed only the number of cigarettes after two hours, without records of the people using the bench. Fourth, our results could be threatened by experimenter demand effects [@zizzo2010experimenter]. Before each run, field assistants cleaned the ground. We cannot fully rule out that potential smokers observed this, which might have affected their behavior. However, we believe that the effect -- if any -- is likely small, as we tried to avoid attention, selected time slots during teaching hours, and cleaning and counting took only approximately three minutes. Finally, our study lasted only for one week. Potential long-term effects are not covered. It would be important to investigate how people change their behavior in the long run. Only one major study [@Dur2015] has so far investigated long-term effects.
+ 
+Our experiment may serve as an inspiration for further experimentation. Extending the combination of sociological theory and behavioral economics in urban and landscape planning can help to address sustainability challenges [e.g. @lilley2009design]. Interdisciplinary collaboration of experimental and behavioral economists with architects and planners is still rare, and there should be more of it [@klotz2019design]. Small field studies such as ours are also well-suited to integrate students into interdisciplinary research activities early in their curricular.  
+
+
+
+
+
+# Note {-} 
+
+This paper was written in Rmarkdown. The code including the statistical analysis reported in this paper, some additional analyses of the data as well as the original data set are included in this submission, and can be directly replicated.
+
+
+# Acknowledgements {-} 
+
+We thank the students from the Study Project "Applied Statistical Methods for Landscape Planning" for constantly commenting and supporting the study. Special thanks go to Janna Baumgart,Leonora Oels, and Janina Pawlik for their contributions to design, data collection and analysis. Finally, we thank Lukas Nelde and Kati Haefner for their support.  Map data copyrighted OpenStreetMap contributors and available from https://www.openstreetmap.org [@OpenStreetMap]
+ 
+
+\newpage
+
+# (APPENDIX) Appendix {-} 
+
+# Appendix
+
+\newpage
+
+\blandscape
+
+
+```{r map, fig.cap="Map showing the location of benches"}
+knitr::include_graphics("Lage_Baenke.pdf")
+```
+
+\elandscape
+
+
+\newpage
+
+\newpage
+
+
+
+```{r balancetests}
+
+
+cobalt::bal.plot(Treatment ~ Bank_Number, data = Zigarro) +
+  xlab("Bench number") +
+#  ylab(" ") +
+  theme_pubr() +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1) +
+  ggtitle("Distributional balance of treatments per bench") +
+  scale_x_discrete(labels = c(1:12))
+
+
+cobalt::bal.plot(Treatment ~ Tag, data = Zigarro) +
+  xlab("Day") +
+#  ylab(" ") +
+  theme_pubr() +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1) +
+  ggtitle("Distributional balance of treatments per day") +
+  scale_x_discrete(labels = c(1:5))
+
+cat('\r\n\r\n')
+
+cobalt::bal.plot(Treatment ~ Uhrzeit, data = Zigarro) +
+  xlab("Time of day") +
+#  ylab(" ") +
+  theme_pubr() +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1) +
+  ggtitle("Distributional balance of treatments at different times of day") +
+  scale_x_discrete(labels = c("11:00","13:00","15:00","17:00"))
+
+```
+
+
+```{r histobydays, fig.cap="Bar Chart by Treatment"}
+
+plot_labeller <- function(variable,value){
+  return(plot_labels[value])
+}
+
+plot_labels <- c('tag1' = "Day 1",'tag2' = "Day 2",'tag3' = "Day 3",'tag4' = "Day 4",'tag5' = "Day 5")
+
+ggplot(Zigarro, aes(x=No_Cigarettes , fill=as.factor(Treatment))) + 
+  geom_bar(alpha=0.5, position = position_dodge2(width=0.9, preserve = "single")) + 
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,4)) +
+  scale_y_continuous(name = "Frequency" , breaks = seq(0,60,5) ) +
+  theme_pubr() +
+  facet_grid(cols = vars(Tag), labeller = plot_labeller) +
+  theme(legend.title = element_blank(), text = element_text(family = "serif")) +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1)
+
+plot_labels <- c('11uhr' = "11:00",'13uhr' = "13:00",'15uhr' = "15:00",'17uhr' = "17:00")
+
+ggplot(Zigarro, aes(x=No_Cigarettes , fill=as.factor(Treatment))) + 
+  geom_bar(alpha=0.5, position = position_dodge2(width=0.9, preserve = "single")) + 
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,4)) +
+  scale_y_continuous(name = "Frequency" , breaks = seq(0,60,5) ) +
+  theme_pubr() +
+  facet_grid(cols = vars(Uhrzeit), labeller = plot_labeller) +
+  theme(legend.title = element_blank(), text = element_text(family = "serif")) +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1)
+
+cat('\r\n\r\n')
+
+plot_labels <- c('b1' = "Bench 1",'b2' = "Bench 2",'b3' = "Bench 3",'b4' = "Bench 4",'b5' = "Bench 5",'b6' = "Bench 6",'b7' = "Bench 7",'b8' = "Bench 8",'b9' = "Bench 9",'b10' = "Bench 10",'b11' = "Bench 11",'b12' = "Bench 12")
+
+ggplot(Zigarro, aes(x=No_Cigarettes , fill=as.factor(Treatment))) + 
+  geom_bar(alpha=0.5, position = position_dodge2(width=0.9, preserve = "single")) + 
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,4)) +
+  scale_y_continuous(name = "Frequency" , breaks = seq(0,60,5) ) +
+  theme_pubr() +
+  facet_wrap(vars(Bank_Number), nrow = 2, labeller = plot_labeller ) +
+  theme(legend.title = element_blank(), text = element_text(family = "serif")) +
+  scale_fill_grey(labels = c("CLEAN","DIRTY"),
+                  start = 0.6 , end = 0.1)
+
+```
+
+\newpage
+
+```{r fullreg , results="asis"}
+
+longtable.stargazer(
+   pois_all ,
+  pois_days ,
+  pois_times ,
+  pois_banks ,
+ pois_basic  ,
+  type = "latex" ,
+  title = "Poisson Models (Full Model Output)" ,
+  header = FALSE,
+  dep.var.caption = "" ,
+  dep.var.labels.include = FALSE ,
+   #single.row = TRUE,
+  covariate.labels = c(
+    "DIRTY",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "1300",
+    "1500",
+    "1700",
+    "Bench 2",
+    "Bench 3",
+    "Bench 4",
+    "Bench 5",
+    "Bench 6",
+    "Bench 7",
+    "Bench 8",
+    "Bench 9",
+    "Bench 10",
+    "Bench 11" ,
+    "Bench 12"
+  ), label="tab:poissonfull"
+)
+
+```
+
+
+
+
+
+
+\newpage
+
+
+```{r linear , results='asis'}
+
+lm_basic <- lm(No_Cigarettes ~ Treatment , data = Zigarro)
+
+lm_days <-
+  lm(No_Cigarettes ~ Treatment + as.factor(Tag) , data = Zigarro)
+lm_times <-
+  lm(No_Cigarettes ~ Treatment + as.factor(Uhrzeit) , data = Zigarro)
+lm_banks <-
+  lm(No_Cigarettes ~ Treatment + as.factor(Bank_Number) , data = Zigarro)
+lm_all <-
+  lm(
+    No_Cigarettes ~ Treatment + as.factor(Tag) + as.factor(Uhrzeit) + as.factor(Bank_Number) ,
+    data = Zigarro
+  )
+
+longtable.stargazer(
+  lm_all ,
+  lm_days ,
+  lm_times ,
+  lm_banks ,
+  lm_basic   ,
+  type = "latex" ,
+  title = "Ordinary Least Square Models" ,
+  header = FALSE,
+    dep.var.caption = "" ,
+  dep.var.labels.include = FALSE ,
+  omit.stat=c("f", "ser"),
+  covariate.labels = c(
+    "DIRTY",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "1300",
+    "1500",
+    "1700",
+    "Bench 2",
+    "Bench 3",
+    "Bench 4",
+    "Bench 5",
+    "Bench 6",
+    "Bench 7",
+    "Bench 8",
+    "Bench 9",
+    "Bench 10",
+    "Bench 11" ,
+    "Bench 12"
+  ) ,
+  label="tab:olsfull"
+)
+
+```
+
+```{r histogramplot by blocks, include=FALSE}
+ggplot(Zigarro, aes(x=No_Cigarettes , color=as.factor(Tag))) + geom_bar(fill="black", alpha=0.5, position="identity") + 
+  geom_vline(aes(xintercept=mean(No_Cigarettes))) +
+  facet_grid(Tag ~ .) +
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,1))
+
+
+ggplot(Zigarro, aes(x=No_Cigarettes , color=as.factor(Uhrzeit))) + geom_bar(fill="black", alpha=0.5, position="identity") + 
+  geom_vline(aes(xintercept=mean(No_Cigarettes))) +
+  facet_grid(Uhrzeit ~ .) +
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,1))
+
+ggplot(Zigarro, aes(x=No_Cigarettes , color=as.factor(Bank_Number))) + geom_bar(fill="black", alpha=0.5, position="identity") + 
+  geom_vline(aes(xintercept=mean(No_Cigarettes))) +
+  facet_grid(Bank_Number ~ .) +
+  scale_x_continuous(name = "Number of cigarettes after 2 hours" , breaks = seq(0,12,1))
+```
+
+
+```{r bankeff, include=FALSE}
+
+summary_table_bankeffects <-Zigarro %>% 
+  group_by(Bank_Number, Treatment ) %>% 
+  summarise(N = n()  , mean = mean(No_Cigarettes) , median = median(No_Cigarettes) , sd = sd(No_Cigarettes) , min=min(No_Cigarettes) , max=max(No_Cigarettes))
+kable(summary_table_bankeffects, booktabs = TRUE)
+
+```
+
+
+
+```{r include=FALSE}
+
+#Finally, we transform the outcome variable `No_Cigarettes` to a binary outcome, which is zero if no cigarettes were found after 2 hours and 1 if at least one cigarette was found.
+
+Zigarro$Cig_binary <- ifelse(Zigarro$No_Cigarettes==0,0,1)
+
+
+summary_table_bin <-Zigarro %>% 
+  group_by(Treatment ) %>% 
+  summarise(N = n()  , mean = mean(Cig_binary) , median = median(Cig_binary) , sd = sd(Cig_binary) , min=min(Cig_binary) , max=max(Cig_binary))
+kable(summary_table_bin, booktabs = TRUE)
+
+summary_table_bankeffects_bin <-Zigarro %>% 
+  group_by(Bank_Number, Treatment ) %>% 
+  summarise(N = n()  , mean = mean(Cig_binary) , median = median(Cig_binary) , sd = sd(Cig_binary) , min=min(Cig_binary) , max=max(Cig_binary))
+kable(summary_table_bankeffects_bin, booktabs = TRUE)
+
+
+proptestdata <- Zigarro %>% 
+  group_by(Treatment, Cig_binary) %>% 
+  summarise(N=n()) 
+
+ 
+positives = cbind(table(Zigarro$Cig_binary[Zigarro$Treatment=="CLEAN"]), table(Zigarro$Cig_binary[Zigarro$Treatment=="DIRTY"]))[1,]
+totals = cbind(length(Zigarro$Cig_binary[Zigarro$Treatment=="CLEAN"]), length(Zigarro$Cig_binary[Zigarro$Treatment=="DIRTY"]) )
+
+positives/totals
+
+
+prop.test(x=as.vector(positives), n=as.vector(totals))
+
+#Again, the test as well as the summary statistics indicate that there is a significant differences between the two treatments.
+
+```
+
+
+
+
+
+\newpage
+
+References {#references .unnumbered}
+==========
